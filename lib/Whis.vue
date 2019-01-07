@@ -26,7 +26,7 @@ export default {
 
   data() {
     return {
-      delayInterval: 0.2,
+      delayInterval: 0.1,
       sampleRate: 44100,
       fftSize: Math.pow(2, 10)
     }
@@ -86,12 +86,14 @@ export default {
       }
       let currentTime = this.$refs.audio.currentTime
       this.analyserNode.getByteFrequencyData(this.analyserDataArray);
-      console.log(this.analyserDataArray.slice(this.freqRangeStartIndex, this.freqRangeEndIndex + 1))
+      let bytes = this.analyserDataArray.slice(this.freqRangeStartIndex, this.freqRangeEndIndex + 1)
+      // console.log(bytes)
+      let minBytes = Math.min(...bytes)
       if (
           // TODO: more complex VAD algorithm
-          this.analyserDataArray.slice(this.freqRangeStartIndex, this.freqRangeEndIndex + 1)
+          bytes.map(byte => byte - minBytes)
               .every(function (val) {
-                  return val < 100
+                  return val < 16
               })
       ) {
           this.seekFlag = true;
@@ -164,11 +166,11 @@ export default {
       this.analyserNode = this.audioContext.createAnalyser();
       this.analyserNode.fftSize = this.fftSize
       this.analyserNode.minDecibels = -90;
-      this.analyserNode.maxDecibels = -10;
+      this.analyserNode.maxDecibels = -30;
       let bufferLength = this.analyserNode.frequencyBinCount
       this.analyserDataArray = new Uint8Array(bufferLength)
-      this.freqRangeStartIndex = Math.ceil(600 / (this.sampleRate / bufferLength))
-      this.freqRangeEndIndex = Math.floor(1000 / (this.sampleRate / bufferLength))
+      this.freqRangeStartIndex = Math.ceil(110 / (this.sampleRate / bufferLength))
+      this.freqRangeEndIndex = Math.floor(440 / (this.sampleRate / bufferLength))
 
       this.audioMiddleNodes = [
         this.analyserNode,
